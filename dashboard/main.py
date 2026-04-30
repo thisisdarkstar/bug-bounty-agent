@@ -107,9 +107,13 @@ async def get_stats():
 @app.get("/api/jobs")
 async def list_jobs():
     """List all scan jobs"""
+    from sqlalchemy import select
+    from core.database import Job
+    
     async with db_manager.get_session() as session:
-        from core.database import Job
-        jobs = session.query(Job).order_by(Job.created_at.desc()).limit(50).all()
+        stmt = select(Job).order_by(Job.created_at.desc()).limit(50)
+        result = await session.execute(stmt)
+        jobs = result.scalars().all()
         
         return {
             "jobs": [

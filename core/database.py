@@ -214,8 +214,13 @@ class DatabaseManager:
     
     async def update_job_status(self, job_id: str, status: str, **kwargs):
         """Update job status and optional fields"""
+        from sqlalchemy import select
+        
         async with self.get_session() as session:
-            job = session.query(Job).filter(Job.id == job_id).first()
+            stmt = select(Job).filter(Job.id == job_id)
+            result = await session.execute(stmt)
+            job = result.scalar_one_or_none()
+            
             if job:
                 job.status = status
                 if status == "running" and not job.started_at:
@@ -255,11 +260,12 @@ class DatabaseManager:
     
     async def check_finding_duplicate(self, sha256_hash: str) -> bool:
         """Check if a finding with this hash already exists"""
+        from sqlalchemy import select
+        
         async with self.get_session() as session:
-            result = session.query(Finding).filter(
-                Finding.sha256_hash == sha256_hash
-            ).first()
-            return result is not None
+            stmt = select(Finding).filter(Finding.sha256_hash == sha256_hash)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none() is not None
     
     async def add_task_result(self, task_data: Dict[str, Any]) -> TaskResult:
         """Add a task execution result"""
@@ -300,42 +306,72 @@ class DatabaseManager:
     
     async def get_job(self, job_id: str) -> Optional[Job]:
         """Get a job by ID"""
+        from sqlalchemy import select
+        
         async with self.get_session() as session:
-            return session.query(Job).filter(Job.id == job_id).first()
+            stmt = select(Job).filter(Job.id == job_id)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
     
     async def get_job_findings(self, job_id: str) -> List[Finding]:
         """Get all findings for a job"""
+        from sqlalchemy import select
+        
         async with self.get_session() as session:
-            return session.query(Finding).filter(
-                Finding.job_id == job_id
-            ).all()
+            stmt = select(Finding).filter(Finding.job_id == job_id)
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
     
     async def get_active_jobs(self) -> List[Job]:
         """Get all active (running/paused) jobs"""
+        from sqlalchemy import select
+        
         async with self.get_session() as session:
-            return session.query(Job).filter(
-                Job.status.in_(["running", "paused"])
-            ).all()
+            stmt = select(Job).filter(Job.status.in_(["running", "paused"]))
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
     
     async def get_dashboard_stats(self) -> Dict[str, Any]:
         """Get statistics for dashboard"""
+        from sqlalchemy import select, func
+        
         async with self.get_session() as session:
+            # Active jobs count
+            stmt = select(func.count()).select_from(Job).where(
+                Job.status.in_(["running", "paused"])
+            )
+            active_jobs = (await session.execute(stmt)).scalar() or 0
+            
+            # Queued jobs count
+            stmt = select(func.count()).select_from(Job).where(
+                Job.status == "pending"
+            )
+            queued_jobs = (await session.execute(stmt)).scalar() or 0
+            
+            # Completed jobs today count
+            stmt = select(func.count()).select_from(Job).where(
+                Job.status == "completed",
+                func.date(Job.completed_at) == func.date(datetime.utcnow())
+            )
+            completed_jobs_today = (await session.execute(stmt)).scalar() or 0
+            
+            # Total findings count
+            stmt = select(func.count()).select_from(Finding)
+            total_findings = (await session.execute(stmt)).scalar() or 0
+            
+            # Pending reviews count
+            stmt = select(func.count()).select_from(Finding).where(
+                Finding.status == "new",
+                Finding.severity.in_(["critical", "high"])
+            )
+            pending_reviews = (await session.execute(stmt)).scalar() or 0
+            
             stats = {
-                "active_jobs": session.query(Job).filter(
-                    Job.status.in_(["running", "paused"])
-                ).count(),
-                "queued_jobs": session.query(Job).filter(
-                    Job.status == "pending"
-                ).count(),
-                "completed_jobs_today": session.query(Job).filter(
-                    Job.status == "completed",
-                    func.date(Job.completed_at) == func.date(datetime.utcnow())
-                ).count(),
-                "total_findings": session.query(Finding).count(),
-                "pending_reviews": session.query(Finding).filter(
-                    Finding.status == "new",
-                    Finding.severity.in_(["critical", "high"])
-                ).count(),
+                "active_jobs": active_jobs,
+                "queued_jobs": queued_jobs,
+                "completed_jobs_today": completed_jobs_today,
+                "total_findings": total_findings,
+                "pending_reviews": pending_reviews,
             }
             return stats
 
