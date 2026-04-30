@@ -1,0 +1,63 @@
+# Core dependencies
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Database & Queue
+sqlalchemy>=2.0.0
+aiosqlite>=0.19.0
+redis>=5.0.0
+celery>=5.3.0
+
+# LLM Integration
+openai>=1.10.0
+httpx>=0.26.0
+
+# Tool Integration
+mcp>=0.1.0
+aiohttp>=3.9.0
+
+# Orchestration
+langgraph>=0.0.1
+langchain>=0.1.0
+langchain-core>=0.1.0
+
+# Async support
+asyncio>=3.4.3
+anyio>=4.2.0
+
+# Security & Sanitization
+bleach>=6.1.0
+python-magic>=0.4.27
+
+# Report Generation
+jinja2>=3.1.3
+weasyprint>=60.1
+markdown>=3.5.1
+
+# Dashboard
+htmx>=1.9.0
+alpinejs>=3.13.0
+
+# Logging & Monitoring
+structlog>=24.1.0
+python-json-logger>=2.0.7
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+vcrpy>=6.0.0
+pytest-vcr>=1.0.2
+
+# Utilities
+pyyaml>=6.0.1
+click>=8.1.7
+python-dotenv>=1.0.0
+rich>=13.7.0
+
+# Docker integration (optional)
+docker>=7.0.0
+
+# Metrics (optional)
+prometheus-client>=0.19.0

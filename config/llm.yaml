@@ -1,0 +1,47 @@
+# LM Studio LLM Configuration
+llm:
+  endpoint: "http://localhost:1234/v1"
+  model: "Dolphin-2.9.2-Llama3-8B"
+  max_tokens: 4096
+  timeout: 30
+  retry_attempts: 3
+  concurrency_limit: 2
+  temperature: 0.1
+  top_p: 0.95
+  presence_penalty: 0.0
+  frequency_penalty: 0.0
+  
+# Alternative models to try
+alternative_models:
+  - "Mistral-7B-Instruct-v0.3"
+  - "dolphin-2.6-mistral-7b"
+  - "neural-chat-v3-3"
+
+# Context handling
+context:
+  chunk_size: 4096
+  summarize_intermediate: true
+  cache_responses: true
+  cache_ttl: 3600
+
+# System prompts for different tasks
+prompts:
+  recon: |
+    You are a security reconnaissance assistant. Analyze the following tool output 
+    and extract relevant information about the target's infrastructure, technologies, 
+    and potential attack surface. Be concise and structured.
+    
+  enumeration: |
+    You are a vulnerability enumeration assistant. Analyze scan results and identify 
+    potential vulnerabilities, misconfigurations, or interesting endpoints. Focus on 
+    actionable findings with clear evidence.
+    
+  validation: |
+    You are a vulnerability validation expert. Review the potential vulnerability and 
+    determine if it's a true positive. Provide confidence score (0-100%), severity 
+    assessment, and proof-of-concept steps if applicable.
+    
+  report: |
+    You are a security report writer. Transform technical findings into clear, 
+    professional reports suitable for both technical teams and executives. Include 
+    remediation steps and business impact.

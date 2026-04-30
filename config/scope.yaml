@@ -1,0 +1,73 @@
+# Scope Configuration
+# Define allowed targets for security testing
+
+scope:
+  # Domain-based targets
+  domains:
+    - domain: "example.com"
+      subdomains: ["*"]  # All subdomains allowed
+      ports: [80, 443, 8080, 8443]
+      rate_limit: 10  # requests per second
+      max_depth: 3  # crawl depth
+      
+    - domain: "test.example.com"
+      subdomains: []  # Only exact domain
+      ports: [80, 443]
+      rate_limit: 5
+      max_depth: 2
+
+  # IP range targets (use with caution)
+  ip_ranges:
+    - range: "192.168.1.0/24"
+      ports: [80, 443, 8080]
+      rate_limit: 5
+      
+  # Specific endpoints to test
+  endpoints:
+    include:
+      - "/api/*"
+      - "/admin/*"
+      - "/login"
+      - "/upload"
+    exclude:
+      - "/logout"
+      - "/health"
+      - "/metrics"
+      
+  # Out-of-scope items (never test these)
+  out_of_scope:
+    domains:
+      - "thirdparty.com"
+      - "*.cloudprovider.net"
+    endpoints:
+      - "*/delete*"
+      - "*/reset*"
+      
+  # Rate limiting defaults
+rate_limiting:
+  default_rps: 10
+  delay_between_requests: 0.1
+  max_concurrent_scans: 3
+  respect_robots_txt: true
+  
+# Tool-specific constraints
+tool_constraints:
+  nmap:
+    timing_template: "T3"  # Polite scanning
+    max_retries: 2
+    
+  nikto:
+    tuning: "123456789abc"  # Avoid DoS tests
+    timeout: 300
+    
+  sqlmap:
+    level: 2
+    risk: 2
+    threads: 3
+    
+# Compliance settings
+compliance:
+  require_authorization: true
+  authorization_file: "/workspace/config/authorizations.yaml"
+  data_retention_days: 90
+  audit_all_commands: true
