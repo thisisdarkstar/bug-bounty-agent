@@ -1,0 +1,1121 @@
+{
+  "job_id": "878b647a-35fa-4b15-98c2-4a4869b35e26",
+  "target": "example.com",
+  "generated_at": "2026-04-30T09:26:37.577769",
+  "findings": [],
+  "tool_outputs": [
+    {
+      "tool": "subdomain_enum",
+      "result": {
+        "domain": "example.com",
+        "subdomains": [
+          "www.example.com"
+        ],
+        "sources": [],
+        "timestamp": "2026-04-30T09:23:56.306703",
+        "status": "completed",
+        "count": 1
+      },
+      "phase": "recon"
+    },
+    {
+      "tool": "tech_detection",
+      "result": {
+        "domain": "example.com",
+        "technologies": [
+          {
+            "name": "Web Server",
+            "value": "cloudflare",
+            "confidence": 80
+          }
+        ],
+        "headers": {
+          "Date": "Thu, 30 Apr 2026 09:24:01 GMT",
+          "Content-Type": "text/html",
+          "Transfer-Encoding": "chunked",
+          "Connection": "keep-alive",
+          "Server": "cloudflare",
+          "Last-Modified": "Sat, 25 Apr 2026 11:01:06 GMT",
+          "Allow": "GET, HEAD",
+          "Age": "2",
+          "cf-cache-status": "HIT",
+          "Content-Encoding": "br",
+          "CF-RAY": "9f457db499308950-SIN"
+        },
+        "server_info": {
+          "server": "cloudflare"
+        },
+        "timestamp": "2026-04-30T09:24:01.380766",
+        "technology_count": 1
+      },
+      "phase": "recon"
+    },
+    {
+      "tool": "port_scan",
+      "result": {
+        "target": "example.com",
+        "open_ports": [
+          {
+            "port": 80,
+            "state": "open",
+            "service": "HTTP"
+          },
+          {
+            "port": 443,
+            "state": "open",
+            "service": "HTTPS"
+          }
+        ],
+        "closed_ports": [],
+        "filtered_ports": [],
+        "scan_time": "2026-04-30T09:24:07.774719",
+        "ports_scanned": 2,
+        "ip_address": "104.20.23.154",
+        "open_count": 2
+      },
+      "phase": "enumeration"
+    },
+    {
+      "tool": "web_scan",
+      "result": {
+        "target": "example.com",
+        "endpoints": [
+          {
+            "url": "http://example.com/",
+            "status_code": 200,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Last-Modified": "Sat, 25 Apr 2026 11:01:06 GMT",
+              "Allow": "GET, HEAD",
+              "Age": "2",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddc9de4fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcae04fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/login",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcbe1efe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/api",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcce37fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/robots.txt",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcde66fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/sitemap.xml",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcee92fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/.git",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddcfebffe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/.env",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd0eecfe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/wp-admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd1f19fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/phpinfo.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd2f43fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/test.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd3f7cfe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/backup",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10504",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd4fa1fe21-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/",
+            "status_code": 200,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Last-Modified": "Sat, 25 Apr 2026 11:01:06 GMT",
+              "Allow": "GET, HEAD",
+              "Age": "689",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd6c3df914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd7c5df914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/login",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd7c85f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/api",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd8cacf914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/robots.txt",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddd9cd2f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/sitemap.xml",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dddacf4f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/.git",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dddbd19f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/.env",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dddcd41f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/wp-admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddddd68f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/phpinfo.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddded89f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/test.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:07 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dddeda9f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/backup",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dddfdcff914-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/",
+            "status_code": 200,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Last-Modified": "Sat, 25 Apr 2026 11:01:06 GMT",
+              "Allow": "GET, HEAD",
+              "Age": "3",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde097afe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde19c1fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/login",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde29f6fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/api",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde3a3bfe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/robots.txt",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde4a64fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/sitemap.xml",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde5a8cfe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/.git",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde6ac6fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/.env",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde7af9fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/wp-admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde8b0ffe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/phpinfo.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde9b30fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/test.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dde9b51fe21-SIN"
+            }
+          },
+          {
+            "url": "http://example.com/backup",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10505",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddeab7ffe21-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/",
+            "status_code": 200,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Last-Modified": "Sat, 25 Apr 2026 11:01:06 GMT",
+              "Allow": "GET, HEAD",
+              "Age": "674",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddebfd3f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddec80af914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/login",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457dded82df914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/api",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddee868f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/robots.txt",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf08b7f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/sitemap.xml",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10493",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf1902f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/.git",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf2925f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/.env",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf3962f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/wp-admin",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf4989f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/phpinfo.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf59b2f914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/test.php",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf69edf914-SIN"
+            }
+          },
+          {
+            "url": "https://example.com/backup",
+            "status_code": 404,
+            "content_length": 528,
+            "headers": {
+              "Date": "Thu, 30 Apr 2026 09:24:08 GMT",
+              "Content-Type": "text/html",
+              "Transfer-Encoding": "chunked",
+              "Connection": "keep-alive",
+              "Server": "cloudflare",
+              "Age": "10494",
+              "cf-cache-status": "HIT",
+              "Content-Encoding": "br",
+              "CF-RAY": "9f457ddf7a08f914-SIN"
+            }
+          },
+          {
+            "url": "http://example.com:8443/",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/admin",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/login",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/api",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/robots.txt",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/sitemap.xml",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/.git",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/.env",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/wp-admin",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/phpinfo.php",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/test.php",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          },
+          {
+            "url": "http://example.com:8443/backup",
+            "status_code": 400,
+            "content_length": 253,
+            "headers": {
+              "Server": "cloudflare",
+              "Date": "Thu, 30 Apr 2026 09:25:20 GMT",
+              "Content-Type": "text/html",
+              "Content-Length": "253",
+              "Connection": "close",
+              "CF-RAY": "-"
+            }
+          }
+        ],
+        "vulnerabilities": [
+          {
+            "type": "missing_security_headers",
+            "severity": "low",
+            "missing_headers": [
+              "X-Frame-Options",
+              "X-Content-Type-Options",
+              "Strict-Transport-Security",
+              "Content-Security-Policy"
+            ],
+            "protocol": "http:80"
+          },
+          {
+            "type": "missing_security_headers",
+            "severity": "low",
+            "missing_headers": [
+              "X-Frame-Options",
+              "X-Content-Type-Options",
+              "Strict-Transport-Security",
+              "Content-Security-Policy"
+            ],
+            "protocol": "https:80"
+          },
+          {
+            "type": "missing_security_headers",
+            "severity": "low",
+            "missing_headers": [
+              "X-Frame-Options",
+              "X-Content-Type-Options",
+              "Strict-Transport-Security",
+              "Content-Security-Policy"
+            ],
+            "protocol": "http:443"
+          },
+          {
+            "type": "missing_security_headers",
+            "severity": "low",
+            "missing_headers": [
+              "X-Frame-Options",
+              "X-Content-Type-Options",
+              "Strict-Transport-Security",
+              "Content-Security-Policy"
+            ],
+            "protocol": "https:443"
+          },
+          {
+            "type": "missing_security_headers",
+            "severity": "low",
+            "missing_headers": [
+              "X-Frame-Options",
+              "X-Content-Type-Options",
+              "Strict-Transport-Security",
+              "Content-Security-Policy"
+            ],
+            "protocol": "http:8443"
+          }
+        ],
+        "security_headers": {
+          "http:80": {
+            "x_frame_options": null,
+            "x_content_type_options": null,
+            "strict_transport_security": null,
+            "content_security_policy": null
+          },
+          "https:80": {
+            "x_frame_options": null,
+            "x_content_type_options": null,
+            "strict_transport_security": null,
+            "content_security_policy": null
+          },
+          "http:443": {
+            "x_frame_options": null,
+            "x_content_type_options": null,
+            "strict_transport_security": null,
+            "content_security_policy": null
+          },
+          "https:443": {
+            "x_frame_options": null,
+            "x_content_type_options": null,
+            "strict_transport_security": null,
+            "content_security_policy": null
+          },
+          "http:8443": {
+            "x_frame_options": null,
+            "x_content_type_options": null,
+            "strict_transport_security": null,
+            "content_security_policy": null
+          }
+        },
+        "timestamp": "2026-04-30T09:24:07.779020",
+        "vulnerability_count": 5,
+        "endpoint_count": 60
+      },
+      "phase": "enumeration"
+    }
+  ],
+  "summary": {
+    "total": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "risk_score": 0
+  }
+}

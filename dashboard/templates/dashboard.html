@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Bounty Agent Dashboard</title>
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .sse-connected::after { content: ' ●'; color: #22c55e; }
+        .sse-disconnected::after { content: ' ●'; color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen" 
+      x-data="dashboard()" 
+      x-init="init()">
+    
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-400">🛡️ Bug Bounty Agent</h1>
+            <div class="flex items-center gap-4">
+                <span class="text-sm" :class="sseConnected ? 'sse-connected' : 'sse-disconnected'">
+                    Live Status
+                </span>
+                <button @click="showConfig = !showConfig" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm">
+                    ⚙️ Config
+                </button>
+                <button @click="refreshStats()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Config Modal -->
+    <div x-show="showConfig" x-cloak 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="showConfig = false">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">⚙️ LLM Configuration</h3>
+                <button @click="showConfig = false" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">LLM Base URL</label>
+                    <input type="text" x-model="config.baseUrl" 
+                           placeholder="http://localhost:1234/v1"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-1">OpenAI-compatible endpoint (e.g., LM Studio, Ollama)</p>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">API Key (Optional)</label>
+                    <input type="password" x-model="config.apiKey" 
+                           placeholder="sk-..."
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-1">Required for some providers (OpenAI, Anthropic, etc.)</p>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Select Model</label>
+                    <div class="flex gap-2">
+                        <select x-model="config.selectedModel" 
+                                class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                            <option value="">-- Select a model --</option>
+                            <template x-for="model in availableModels" :key="model.id">
+                                <option :value="model.id" x-text="model.id"></option>
+                            </template>
+                        </select>
+                        <button @click="fetchModels()" 
+                                :disabled="fetchingModels"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded">
+                            <span x-show="!fetchingModels">🔄 Load</span>
+                            <span x-show="fetchingModels">⏳...</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Click "Load" to fetch available models from the base URL</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button @click="showConfig = false" 
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded">
+                        Cancel
+                    </button>
+                    <button @click="saveConfig()" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded">
+                        💾 Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-5 gap-4 mb-8">
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Active Jobs</div>
+                <div class="text-3xl font-bold text-blue-400" x-text="stats.active_jobs">0</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Queued</div>
+                <div class="text-3xl font-bold text-yellow-400" x-text="stats.queued_jobs">0</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Completed Today</div>
+                <div class="text-3xl font-bold text-green-400" x-text="stats.completed_jobs_today">0</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Total Findings</div>
+                <div class="text-3xl font-bold text-purple-400" x-text="stats.total_findings">0</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="text-gray-400 text-sm">Pending Review</div>
+                <div class="text-3xl font-bold text-red-400" x-text="stats.pending_reviews">0</div>
+            </div>
+        </div>
+
+        <!-- New Scan Form -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+            <h2 class="text-xl font-semibold mb-4">🎯 Start New Scan</h2>
+            <form @submit.prevent="startScan()" class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm text-gray-400 mb-1">Target Domain</label>
+                    <input type="text" x-model="newScan.target" 
+                           placeholder="example.com"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                </div>
+                <div class="w-32">
+                    <label class="block text-sm text-gray-400 mb-1">Rate Limit (RPS)</label>
+                    <input type="number" x-model="newScan.rateLimit" 
+                           placeholder="10"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                </div>
+                <button type="submit" 
+                        :disabled="starting"
+                        class="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded font-semibold">
+                    <span x-show="!starting">🚀 Start Scan</span>
+                    <span x-show="starting">⏳ Starting...</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Jobs Table -->
+        <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold">📋 Scan Jobs</h2>
+            </div>
+            <table class="w-full">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Job ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Target</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Progress</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    <template x-for="job in jobs" :key="job.id">
+                        <tr class="hover:bg-gray-750">
+                            <td class="px-6 py-4 text-sm font-mono text-gray-400" x-text="job.id.substring(0, 8) + '...'"></td>
+                            <td class="px-6 py-4 text-sm" x-text="job.target_domain"></td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 rounded text-xs font-semibold"
+                                      :class="{
+                                          'bg-yellow-900 text-yellow-300': job.status === 'pending',
+                                          'bg-blue-900 text-blue-300': job.status === 'running',
+                                          'bg-green-900 text-green-300': job.status === 'completed',
+                                          'bg-red-900 text-red-300': job.status === 'failed',
+                                          'bg-gray-900 text-gray-300': job.status === 'cancelled'
+                                      }"
+                                      x-text="job.status.toUpperCase()">
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="w-32 bg-gray-700 rounded-full h-2">
+                                    <div class="h-2 rounded-full transition-all duration-500"
+                                         :class="{
+                                             'bg-blue-500': job.status === 'running',
+                                             'bg-green-500': job.status === 'completed',
+                                             'bg-red-500': job.status === 'failed'
+                                         }"
+                                         :style="'width: ' + job.progress + '%'"></div>
+                                </div>
+                                <span class="text-xs text-gray-400" x-text="Math.round(job.progress) + '%'"></span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-400" x-text="formatDate(job.created_at)"></td>
+                            <td class="px-6 py-4">
+                                <button @click="viewJob(job.id)" 
+                                        class="text-blue-400 hover:text-blue-300 text-sm mr-3">
+                                    View
+                                </button>
+                                <button x-show="job.status === 'running' || job.status === 'pending'"
+                                        @click="cancelJob(job.id)"
+                                        class="text-red-400 hover:text-red-300 text-sm">
+                                    Cancel
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="jobs.length === 0">
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                            No scan jobs yet. Start your first scan above!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Job Detail Modal -->
+        <div x-show="selectedJob" x-cloak 
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+             @click.self="selectedJob = null">
+            <div class="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">Job Details</h3>
+                    <button @click="selectedJob = null" class="text-gray-400 hover:text-white">✕</button>
+                </div>
+                <template x-if="selectedJob">
+                    <div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <div class="text-gray-400 text-sm">Target</div>
+                                <div class="font-semibold" x-text="selectedJob.job?.target_domain"></div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-sm">Status</div>
+                                <div x-text="selectedJob.job?.status"></div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-sm">Progress</div>
+                                <div x-text="Math.round(selectedJob.job?.progress || 0) + '%'"></div>
+                            </div>
+                            <div>
+                                <div class="text-gray-400 text-sm">Findings</div>
+                                <div x-text="(selectedJob.findings || []).length"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Auto-refresh button for logs -->
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold">🔧 Tool Execution Logs</h4>
+                            <button @click="refreshJobLogs(selectedJob.job?.id)" 
+                                    class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded"
+                                    :disabled="selectedJob.job?.status !== 'running'">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2 mt-2">Findings</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto">
+                            <template x-for="finding in selectedJob.findings" :key="finding.id">
+                                <div class="bg-gray-700 rounded p-3">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="font-semibold" x-text="finding.title"></div>
+                                            <div class="text-sm text-gray-400" x-text="finding.affected_endpoint"></div>
+                                        </div>
+                                        <span class="px-2 py-1 rounded text-xs font-semibold"
+                                              :class="{
+                                                  'bg-red-900 text-red-300': finding.severity === 'critical',
+                                                  'bg-orange-900 text-orange-300': finding.severity === 'high',
+                                                  'bg-yellow-900 text-yellow-300': finding.severity === 'medium',
+                                                  'bg-blue-900 text-blue-300': finding.severity === 'low',
+                                                  'bg-gray-900 text-gray-300': finding.severity === 'info'
+                                              }"
+                                              x-text="finding.severity.toUpperCase()">
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                            <div x-show="(selectedJob.findings || []).length === 0" 
+                                 class="text-gray-400 text-center py-4">
+                                No findings yet
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2 mt-4">🔧 Tool Execution Logs</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            <template x-for="log in selectedJob.logs" :key="log.timestamp">
+                                <div class="bg-gray-700 rounded p-3 font-mono text-xs">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-semibold text-blue-400" x-text="log.tool"></span>
+                                        <span class="px-2 py-0.5 rounded text-xs"
+                                              :class="{
+                                                  'bg-green-900 text-green-300': log.status === 'completed',
+                                                  'bg-yellow-900 text-yellow-300': log.status === 'running',
+                                                  'bg-red-900 text-red-300': log.status === 'failed',
+                                                  'bg-gray-900 text-gray-300': log.status === 'pending'
+                                              }"
+                                              x-text="log.status"></span>
+                                    </div>
+                                    <div class="text-gray-400" x-text="log.timestamp"></div>
+                                    <div class="mt-1 text-gray-300 whitespace-pre-wrap" x-show="log.output" x-text="log.output"></div>
+                                    <div class="mt-1 text-red-400 whitespace-pre-wrap" x-show="log.error" x-text="log.error"></div>
+                                    <div class="mt-1 text-gray-500" x-show="log.duration" x-text="'Duration: ' + log.duration.toFixed(2) + 's'"></div>
+                                </div>
+                            </template>
+                            <div x-show="(selectedJob.logs || []).length === 0" 
+                                 class="text-gray-400 text-center py-4">
+                                No tool execution logs yet. Logs will appear as tools run...
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                sseConnected: false,
+                starting: false,
+                showConfig: false,
+                fetchingModels: false,
+                config: {
+                    baseUrl: localStorage.getItem('llmBaseUrl') || 'http://localhost:1234/v1',
+                    apiKey: localStorage.getItem('llmApiKey') || '',
+                    selectedModel: localStorage.getItem('llmSelectedModel') || ''
+                },
+                availableModels: [],
+                stats: {
+                    active_jobs: 0,
+                    queued_jobs: 0,
+                    completed_jobs_today: 0,
+                    total_findings: 0,
+                    pending_reviews: 0
+                },
+                jobs: [],
+                newScan: {
+                    target: '',
+                    rateLimit: 10
+                },
+                selectedJob: null,
+
+                async init() {
+                    await this.refreshStats();
+                    await this.loadJobs();
+                    this.connectSSE();
+                    
+                    // Auto-refresh every 10 seconds
+                    setInterval(() => {
+                        this.refreshStats();
+                        this.loadJobs();
+                    }, 10000);
+                },
+
+                connectSSE() {
+                    const eventSource = new EventSource('/api/events');
+                    
+                    eventSource.onopen = () => {
+                        this.sseConnected = true;
+                        console.log('SSE connected');
+                    };
+                    
+                    eventSource.onerror = () => {
+                        this.sseConnected = false;
+                        console.log('SSE disconnected');
+                        eventSource.close();
+                        // Reconnect after 5 seconds
+                        setTimeout(() => this.connectSSE(), 5000);
+                    };
+                    
+                    eventSource.addEventListener('job_created', (e) => {
+                        console.log('Job created:', e.data);
+                        this.loadJobs();
+                    });
+                    
+                    eventSource.addEventListener('job_started', (e) => {
+                        console.log('Job started:', e.data);
+                        this.loadJobs();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
+                    });
+                    
+                    eventSource.addEventListener('job_completed', (e) => {
+                        console.log('Job completed:', e.data);
+                        this.loadJobs();
+                        this.refreshStats();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
+                    });
+                    
+                    eventSource.addEventListener('job_failed', (e) => {
+                        console.log('Job failed:', e.data);
+                        this.loadJobs();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
+                    });
+                },
+
+                async refreshStats() {
+                    try {
+                        const response = await fetch('/api/stats');
+                        this.stats = await response.json();
+                    } catch (error) {
+                        console.error('Failed to refresh stats:', error);
+                    }
+                },
+
+                async loadJobs() {
+                    try {
+                        const response = await fetch('/api/jobs');
+                        const data = await response.json();
+                        this.jobs = data.jobs;
+                    } catch (error) {
+                        console.error('Failed to load jobs:', error);
+                    }
+                },
+
+                async startScan() {
+                    if (!this.newScan.target) return;
+                    
+                    this.starting = true;
+                    try {
+                        const response = await fetch('/api/jobs', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                target_domain: this.newScan.target,
+                                rate_limit: parseInt(this.newScan.rateLimit)
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            this.newScan.target = '';
+                            await this.loadJobs();
+                            await this.refreshStats();
+                        } else {
+                            alert('Failed to start scan');
+                        }
+                    } catch (error) {
+                        console.error('Failed to start scan:', error);
+                        alert('Error starting scan');
+                    } finally {
+                        this.starting = false;
+                    }
+                },
+
+                async cancelJob(jobId) {
+                    if (!confirm('Cancel this scan job?')) return;
+                    
+                    try {
+                        await fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST' });
+                        await this.loadJobs();
+                    } catch (error) {
+                        console.error('Failed to cancel job:', error);
+                    }
+                },
+
+                async viewJob(jobId) {
+                    try {
+                        const response = await fetch(`/api/jobs/${jobId}`);
+                        const jobData = await response.json();
+                        
+                        // Fetch logs separately
+                        const logsResponse = await fetch(`/api/jobs/${jobId}/logs`);
+                        const logsData = await logsResponse.json();
+                        
+                        this.selectedJob = {
+                            ...jobData,
+                            logs: logsData.logs || []
+                        };
+                    } catch (error) {
+                        console.error('Failed to load job details:', error);
+                    }
+                },
+
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleString();
+                },
+
+                async fetchModels() {
+                    if (!this.config.baseUrl) {
+                        alert('Please enter a base URL first');
+                        return;
+                    }
+
+                    this.fetchingModels = true;
+                    try {
+                        // Use backend proxy to avoid CORS issues, include API key if set
+                        const encodedUrl = encodeURIComponent(this.config.baseUrl);
+                        const headers = {};
+                        if (this.config.apiKey) {
+                            headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+                        }
+                        
+                        const response = await fetch(`/api/llm/models?base_url=${encodedUrl}`, { headers });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || `HTTP ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        this.availableModels = data.data || [];
+                        
+                        if (this.availableModels.length === 0) {
+                            alert('No models found. Make sure LM Studio/Ollama is running with models loaded.');
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch models:', error);
+                        alert(`Failed to fetch models: ${error.message}\n\nMake sure:\n1. Your LLM server (LM Studio/Ollama) is running\n2. The base URL is correct\n3. Models are loaded in the server\n4. API key is valid (if required)`);
+                        this.availableModels = [];
+                    } finally {
+                        this.fetchingModels = false;
+                    }
+                },
+
+                async refreshJobLogs(jobId) {
+                    if (!jobId) return;
+                    
+                    try {
+                        const logsResponse = await fetch(`/api/jobs/${jobId}/logs`);
+                        const logsData = await logsResponse.json();
+                        
+                        if (this.selectedJob && this.selectedJob.job?.id === jobId) {
+                            this.selectedJob.logs = logsData.logs || [];
+                        }
+                    } catch (error) {
+                        console.error('Failed to refresh logs:', error);
+                    }
+                },
+
+                saveConfig() {
+                    if (!this.config.baseUrl) {
+                        alert('Please enter a base URL');
+                        return;
+                    }
+                    
+                    localStorage.setItem('llmBaseUrl', this.config.baseUrl);
+                    localStorage.setItem('llmApiKey', this.config.apiKey || '');
+                    localStorage.setItem('llmSelectedModel', this.config.selectedModel || '');
+                    
+                    alert(`Configuration saved!\n\nBase URL: ${this.config.baseUrl}\nAPI Key: ${this.config.apiKey ? '****' + this.config.apiKey.slice(-4) : 'Not set'}\nModel: ${this.config.selectedModel || 'Not selected'}`);
+                    this.showConfig = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

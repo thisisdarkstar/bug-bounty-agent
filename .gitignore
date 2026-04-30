@@ -1,0 +1,27 @@
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Directories
+.env
+.env.local
+.env.*
+venv/
+.venv/
+.envrc
+.coverage
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.tox/
+.cover/
+
+# Files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+```
