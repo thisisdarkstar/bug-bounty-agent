@@ -256,6 +256,35 @@ async def health_check():
     }
 
 
+@app.get("/api/jobs/{job_id}/logs")
+async def get_job_logs(job_id: str):
+    """Get real-time logs for a specific job"""
+    from sqlalchemy import select
+    from core.database import TaskResult
+    
+    if not db_manager.async_session_maker:
+        await db_manager.initialize()
+    
+    async with db_manager.get_session() as session:
+        # Get task results for this job
+        stmt = select(TaskResult).where(TaskResult.job_id == job_id).order_by(TaskResult.timestamp.desc())
+        result = await session.execute(stmt)
+        tasks = result.scalars().all()
+        
+        logs = []
+        for task in tasks:
+            logs.append({
+                "timestamp": task.timestamp.isoformat(),
+                "tool": task.tool_name,
+                "status": "completed" if task.success else "failed",
+                "output": task.stdout or "",
+                "error": task.stderr or "",
+                "duration": task.duration_seconds
+            })
+        
+        return {"logs": logs}
+
+
 @app.get("/api/llm/models")
 async def get_llm_models(base_url: str, request: Request):
     """Proxy endpoint to fetch available models from LLM server (handles CORS)"""

@@ -5,37 +5,23 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Compressed files
-*.gz
-*.zip
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-
-# Logs
-*.log
-
-# Environment
+# Directories
 .env
 .env.local
 .env.*
-
-# Coverage
+venv/
+.venv/
+.envrc
 .coverage
-coverage/
 htmlcov/
+.mypy_cache/
+.pytest_cache/
+.tox/
+.cover/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Files
+*.log
 *.tmp
-
-# OS
 .DS_Store
 Thumbs.db
 ```

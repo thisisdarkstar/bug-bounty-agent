@@ -243,8 +243,18 @@
                             </div>
                         </div>
                         
-                        <h4 class="font-semibold mb-2">Findings</h4>
-                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Auto-refresh button for logs -->
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold">🔧 Tool Execution Logs</h4>
+                            <button @click="refreshJobLogs(selectedJob.job?.id)" 
+                                    class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded"
+                                    :disabled="selectedJob.job?.status !== 'running'">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2 mt-2">Findings</h4>
+                        <div class="space-y-2 max-h-48 overflow-y-auto">
                             <template x-for="finding in selectedJob.findings" :key="finding.id">
                                 <div class="bg-gray-700 rounded p-3">
                                     <div class="flex justify-between items-start">
@@ -268,6 +278,33 @@
                             <div x-show="(selectedJob.findings || []).length === 0" 
                                  class="text-gray-400 text-center py-4">
                                 No findings yet
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-2 mt-4">🔧 Tool Execution Logs</h4>
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            <template x-for="log in selectedJob.logs" :key="log.timestamp">
+                                <div class="bg-gray-700 rounded p-3 font-mono text-xs">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-semibold text-blue-400" x-text="log.tool"></span>
+                                        <span class="px-2 py-0.5 rounded text-xs"
+                                              :class="{
+                                                  'bg-green-900 text-green-300': log.status === 'completed',
+                                                  'bg-yellow-900 text-yellow-300': log.status === 'running',
+                                                  'bg-red-900 text-red-300': log.status === 'failed',
+                                                  'bg-gray-900 text-gray-300': log.status === 'pending'
+                                              }"
+                                              x-text="log.status"></span>
+                                    </div>
+                                    <div class="text-gray-400" x-text="log.timestamp"></div>
+                                    <div class="mt-1 text-gray-300 whitespace-pre-wrap" x-show="log.output" x-text="log.output"></div>
+                                    <div class="mt-1 text-red-400 whitespace-pre-wrap" x-show="log.error" x-text="log.error"></div>
+                                    <div class="mt-1 text-gray-500" x-show="log.duration" x-text="'Duration: ' + log.duration.toFixed(2) + 's'"></div>
+                                </div>
+                            </template>
+                            <div x-show="(selectedJob.logs || []).length === 0" 
+                                 class="text-gray-400 text-center py-4">
+                                No tool execution logs yet. Logs will appear as tools run...
                             </div>
                         </div>
                     </div>
@@ -339,17 +376,32 @@
                     eventSource.addEventListener('job_started', (e) => {
                         console.log('Job started:', e.data);
                         this.loadJobs();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
                     });
                     
                     eventSource.addEventListener('job_completed', (e) => {
                         console.log('Job completed:', e.data);
                         this.loadJobs();
                         this.refreshStats();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
                     });
                     
                     eventSource.addEventListener('job_failed', (e) => {
                         console.log('Job failed:', e.data);
                         this.loadJobs();
+                        
+                        // Auto-refresh logs if job detail modal is open for this job
+                        if (this.selectedJob && this.selectedJob.job?.id === e.data.job_id) {
+                            this.refreshJobLogs(e.data.job_id);
+                        }
                     });
                 },
 
@@ -415,7 +467,16 @@
                 async viewJob(jobId) {
                     try {
                         const response = await fetch(`/api/jobs/${jobId}`);
-                        this.selectedJob = await response.json();
+                        const jobData = await response.json();
+                        
+                        // Fetch logs separately
+                        const logsResponse = await fetch(`/api/jobs/${jobId}/logs`);
+                        const logsData = await logsResponse.json();
+                        
+                        this.selectedJob = {
+                            ...jobData,
+                            logs: logsData.logs || []
+                        };
                     } catch (error) {
                         console.error('Failed to load job details:', error);
                     }
@@ -460,6 +521,21 @@
                         this.availableModels = [];
                     } finally {
                         this.fetchingModels = false;
+                    }
+                },
+
+                async refreshJobLogs(jobId) {
+                    if (!jobId) return;
+                    
+                    try {
+                        const logsResponse = await fetch(`/api/jobs/${jobId}/logs`);
+                        const logsData = await logsResponse.json();
+                        
+                        if (this.selectedJob && this.selectedJob.job?.id === jobId) {
+                            this.selectedJob.logs = logsData.logs || [];
+                        }
+                    } catch (error) {
+                        console.error('Failed to refresh logs:', error);
                     }
                 },
 
