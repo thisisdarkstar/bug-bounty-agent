@@ -140,11 +140,14 @@ class FindingCache(Base):
 class DatabaseManager:
     """Async database manager for SQLite"""
     
-    def __init__(self, db_path: str = "/workspace/data/bugbounty.db"):
+    def __init__(self, db_path: str = None):
+        if db_path is None:
+            # Use relative path from project root
+            project_root = Path(__file__).parent.parent
+            db_path = str(project_root / "data" / "bugbounty.db")
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.async_engine = None
-        self.async_session_maker = None
         self.sync_engine = None
         
     def _get_async_url(self) -> str:

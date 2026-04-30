@@ -42,7 +42,7 @@ app = FastAPI(
 
 # Templates and static files
 templates_path = Path(__file__).parent / "templates"
-templates = Jinja2Templates(directory=str(templates_path))
+templates = Jinja2Templates(directory=templates_path)
 
 
 # === Request/Response Models ===
@@ -94,7 +94,7 @@ async def broadcast_event(event_data: Dict[str, Any]):
 @app.get("/", response_class=HTMLResponse)
 async def dashboard_home(request: Request):
     """Main dashboard page"""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse("dashboard.html", {"request": request, "title": "Bug Bounty Agent"})
 
 
 @app.get("/api/stats")

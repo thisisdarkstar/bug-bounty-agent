@@ -43,5 +43,7 @@ echo ""
 echo "Starting server..."
 echo ""
 
-cd /workspace
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000 --reload
