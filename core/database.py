@@ -239,11 +239,11 @@ class DatabaseManager:
                 severity=finding_data["severity"],
                 confidence_score=finding_data.get("confidence_score", 50),
                 cvss_score=finding_data.get("cvss_score"),
-                cwe_ids=json.dumps(findings_data.get("cwe_ids", [])),
+                cwe_ids=json.dumps(finding_data.get("cwe_ids", [])),
                 affected_endpoint=finding_data["affected_endpoint"],
                 proof_of_concept=finding_data.get("proof_of_concept", ""),
                 remediation=finding_data.get("remediation", ""),
-                raw_evidence=json.dumps(findings_data.get("raw_evidence", {})),
+                raw_evidence=json.dumps(finding_data.get("raw_evidence", {})),
                 sha256_hash=sha256_hash
             )
             session.add(finding)

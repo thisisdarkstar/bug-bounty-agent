@@ -1,145 +1,106 @@
-# Bug Bounty Agent - Autonomous Security Testing Platform
+# 🛡️ Bug Bounty Agent
 
-## Overview
-A comprehensive autonomous bug bounty hunting agent with local LLM integration, tool orchestration, and real-time dashboard.
-
-## Architecture
-
-### Core Stack
-- **Backend**: Python 3.11+ with FastAPI
-- **Database**: SQLite (state & findings)
-- **Queue**: Redis + Celery (task queue)
-- **Isolation**: Docker containers with security hardening
-- **LLM**: LM Studio (local, OpenAI-compatible API)
-
-### Directory Structure
-```
-/workspace
-├── core/           # Orchestrator, state machine, LangGraph pipelines
-├── tools/          # hexstrike/kali-mcp wrappers, tool integrations
-├── agents/         # LLM pipelines, prompt engineering, analysis
-├── dashboard/      # Frontend (HTMX + Alpine.js + TailwindCSS)
-├── reports/        # Exported reports (HTML, JSON, PDF, Markdown)
-├── logs/           # Structured JSON audit logs
-├── tests/          # pytest suites, VCR cassettes
-├── prompts/        # Versioned prompt library
-└── config/         # YAML/JSON configurations
-```
-
-### Execution Flow
-1. **Scope Validation** → Validate targets against allowlist
-2. **Recon** → Passive reconnaissance (subdomain enum, tech detection)
-3. **Enumeration** → Active scanning (ports, services, endpoints)
-4. **Validation** → Vulnerability verification with PoC generation
-5. **Report Generation** → Multi-format export with remediation steps
-
-## Features
-
-### Local LLM Integration (LM Studio)
-- Endpoint: `http://localhost:1234/v1`
-- Models: 8B-13B instruct models (Dolphin, Mistral, security-fine-tuned)
-- Quantization: Q4_K_M / Q5_K_M for 8-12GB VRAM
-- Concurrency: asyncio.Semaphore(2), 30s timeout, exponential backoff
-
-### Tool Integration
-- **kali-mcp**: MCP SDK integration for Kali tools
-- **hexstrike**: Subprocess/aiohttp bridge with structured output
-- **Sandboxing**: Docker with seccomp, AppArmor, read-only FS
-
-### Analysis Pipeline
-- Hybrid parsing: Regex + LLM semantic analysis + cross-validation
-- Finding classification: CWE mapping, CVSS v4.0 scoring
-- False positive reduction: SHA-256 deduplication, FP database
-
-### Report Generation
-- Templates: Jinja2 with modular sections
-- Formats: HTML, TXT, JSON, Markdown, PDF
-- Automation: Triggered on job completion
-
-### Web Dashboard
-- Real-time log streaming via SSE
-- Scan queue monitoring with start/stop/pause
-- Finding triage with severity filters and approval gates
-- Multi-format report export
-
-## Security & Compliance
-- Command sanitization with destructive pattern blocking
-- Rate limiting per target and tool
-- Dry-run mode for validation
-- Immutable audit logs
-- Emergency kill endpoint
+Autonomous Security Testing Platform with Local LLM Integration
 
 ## Quick Start
 
 ### Prerequisites
-```bash
-# Install LM Studio and download a model
-# Start LM Studio server: lmstudio --server
+- Python 3.11+
+- LM Studio running locally (optional, for LLM features)
 
+### One-Command Start
+
+```bash
+./start.sh
+```
+
+This script will:
+1. Check/install dependencies
+2. Initialize the SQLite database
+3. Start the FastAPI dashboard on http://localhost:8000
+
+### Manual Setup
+
+```bash
 # Install dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
-# Start Redis
-redis-server
+# Initialize database
+python3 core/migrate.py
 
-# Run migrations
-python core/migrate.py
+# Start dashboard
+python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Launch Components
-```bash
-# Start the orchestrator
-python core/orchestrator.py
+## Features
 
-# Start the dashboard
-python dashboard/app.py
+- **5-Phase Workflow**: Scope Validation → Recon → Enumeration → Validation → Report
+- **Local LLM**: LM Studio integration (OpenAI-compatible API)
+- **Real-time Dashboard**: HTMX + Alpine.js with SSE streaming
+- **Multi-format Reports**: HTML, JSON, Markdown, TXT, PDF-ready
+- **SQLite Storage**: Job tracking, findings, audit logs
+- **Docker Sandboxing**: Isolated tool execution (planned)
 
-# Or use Docker Compose
-docker-compose up -d
+## Architecture
+
+```
+/workspace
+├── core/           # Database, LLM client, orchestrator, models
+├── tools/          # Recon, scanners, validators
+├── agents/         # Report generator, analysis pipelines
+├── dashboard/      # FastAPI backend + HTML templates
+├── reports/        # Generated reports
+├── data/           # SQLite database, cache
+└── logs/           # Structured JSON logs
 ```
 
-### Access Dashboard
-- URL: `http://localhost:8000`
-- Default auth: HTTP Basic (configure in `config/auth.yaml`)
+## API Endpoints
 
-## Configuration
+- `GET /` - Dashboard UI
+- `GET /api/stats` - Dashboard statistics
+- `GET /api/jobs` - List all jobs
+- `POST /api/jobs` - Create new scan job
+- `GET /api/jobs/{id}` - Get job details
+- `POST /api/jobs/{id}/cancel` - Cancel job
+- `GET /api/events` - SSE stream for real-time updates
+- `GET /api/health` - Health check
 
-### Scope Configuration (`config/scope.yaml`)
-```yaml
-allowed_targets:
-  - domain: example.com
-    subdomains: ["*"]
-    ports: [80, 443, 8080]
-    rate_limit: 10  # requests/second
-  - ip_range: 192.168.1.0/24
-    ports: [80, 443]
-```
+## LLM Integration
 
-### LLM Configuration (`config/llm.yaml`)
-```yaml
-endpoint: http://localhost:1234/v1
-model: Dolphin-2.9.2-Llama3-8B
-max_tokens: 4096
-timeout: 30
-retry_attempts: 3
-concurrency_limit: 2
-```
+The platform integrates with LM Studio for local LLM-powered analysis:
+
+1. Install [LM Studio](https://lmstudio.ai/)
+2. Download a model (e.g., Dolphin-2.9.2-Llama3-8B)
+3. Start LM Studio server: `http://localhost:1234`
+4. The agent automatically connects to this endpoint
 
 ## Testing
+
+Test against vulnerable applications:
+- OWASP Juice Shop
+- DVWA (Damn Vulnerable Web Application)
+- WebGoat
+
 ```bash
-# Run against DVWA
-pytest tests/integration/test_dvwa.py
-
-# Replay recorded tool outputs
-pytest tests/unit --vcr-record=none
-
-# Benchmark FP/TP rates
-python tests/benchmark.py
+# Example: Scan a local test target
+curl -X POST http://localhost:8000/api/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"target_domain": "testphp.vulnweb.com", "rate_limit": 10}'
 ```
 
-## License
-MIT License - For authorized security testing only
+## Safety & Compliance
 
-## Disclaimer
-This tool is designed for authorized security testing and bug bounty programs only. 
-Always obtain explicit written permission before testing any target.
+⚠️ **IMPORTANT**: Only scan targets you have explicit authorization to test.
+
+- Scope validation prevents out-of-scope scanning
+- Rate limiting enabled by default
+- Audit logging for all actions
+- Emergency stop: `POST /api/jobs/{id}/cancel`
+
+## Roadmap
+
+- [ ] Kali-MCP integration
+- [ ] Docker sandboxing for tools
+- [ ] HackerOne/Bugcrowd API integration
+- [ ] Automated patch suggestions
+- [ ] Multi-target concurrent scanning

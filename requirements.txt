@@ -24,7 +24,6 @@ langchain>=0.1.0
 langchain-core>=0.1.0
 
 # Async support
-asyncio>=3.4.3
 anyio>=4.2.0
 
 # Security & Sanitization
