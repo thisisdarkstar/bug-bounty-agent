@@ -11,13 +11,16 @@ Autonomous Security Testing Platform with Local LLM Integration
 ### One-Command Start
 
 ```bash
-./start.sh
+./start.sh                      # Normal start
+./start.sh --auto-install       # Auto-install hexstrike/kali-mcp if missing
+AUTO_INSTALL_TOOLS=true ./start.sh  # Also auto-installs tools
 ```
 
 This script will:
 1. Check/install dependencies
 2. Initialize the SQLite database
-3. Start the FastAPI dashboard on http://localhost:8000
+3. Check/install/start hexstrike and kali-mcp servers (if available or with --auto-install)
+4. Start the FastAPI dashboard on http://localhost:8000
 
 ### Manual Setup
 
@@ -67,12 +70,26 @@ python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000 --reload
 
 ## LLM Integration
 
-The platform integrates with LM Studio for local LLM-powered analysis:
+The platform integrates with LM Studio (or any OpenAI-compatible server) for local LLM-powered analysis:
 
-1. Install [LM Studio](https://lmstudio.ai/)
-2. Download a model (e.g., Dolphin-2.9.2-Llama3-8B)
-3. Start LM Studio server: `http://localhost:1234`
-4. The agent automatically connects to this endpoint
+### Frontend Configuration
+
+1. Start the dashboard: `./start.sh`
+2. Click **⚙️ Config** in the header
+3. Enter your LLM Base URL (e.g., `http://localhost:1234/v1`)
+4. (Optional) Enter API Key if required by your provider
+5. Click **🔄 Load** to fetch available models
+6. Select a model from the dropdown
+7. Click **💾 Save Configuration**
+
+### Supported Providers
+
+- **LM Studio**: `http://localhost:1234/v1` (no API key needed)
+- **Ollama**: `http://localhost:11434/v1` (no API key needed)
+- **OpenAI**: `https://api.openai.com/v1` (requires API key)
+- **Any OpenAI-compatible endpoint**
+
+The configuration is saved in your browser's localStorage and persists across sessions.
 
 ## Testing
 

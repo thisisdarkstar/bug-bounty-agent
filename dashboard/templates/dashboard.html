@@ -28,12 +28,72 @@
                 <span class="text-sm" :class="sseConnected ? 'sse-connected' : 'sse-disconnected'">
                     Live Status
                 </span>
+                <button @click="showConfig = !showConfig" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded text-sm">
+                    ⚙️ Config
+                </button>
                 <button @click="refreshStats()" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">
                     Refresh
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- Config Modal -->
+    <div x-show="showConfig" x-cloak 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="showConfig = false">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-xl w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">⚙️ LLM Configuration</h3>
+                <button @click="showConfig = false" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">LLM Base URL</label>
+                    <input type="text" x-model="config.baseUrl" 
+                           placeholder="http://localhost:1234/v1"
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-1">OpenAI-compatible endpoint (e.g., LM Studio, Ollama)</p>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">API Key (Optional)</label>
+                    <input type="password" x-model="config.apiKey" 
+                           placeholder="sk-..."
+                           class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                    <p class="text-xs text-gray-500 mt-1">Required for some providers (OpenAI, Anthropic, etc.)</p>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Select Model</label>
+                    <div class="flex gap-2">
+                        <select x-model="config.selectedModel" 
+                                class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 focus:outline-none">
+                            <option value="">-- Select a model --</option>
+                            <template x-for="model in availableModels" :key="model.id">
+                                <option :value="model.id" x-text="model.id"></option>
+                            </template>
+                        </select>
+                        <button @click="fetchModels()" 
+                                :disabled="fetchingModels"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded">
+                            <span x-show="!fetchingModels">🔄 Load</span>
+                            <span x-show="fetchingModels">⏳...</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Click "Load" to fetch available models from the base URL</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-4">
+                    <button @click="showConfig = false" 
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded">
+                        Cancel
+                    </button>
+                    <button @click="saveConfig()" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded">
+                        💾 Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="container mx-auto px-6 py-8">
         <!-- Stats Cards -->
@@ -221,6 +281,14 @@
             return {
                 sseConnected: false,
                 starting: false,
+                showConfig: false,
+                fetchingModels: false,
+                config: {
+                    baseUrl: localStorage.getItem('llmBaseUrl') || 'http://localhost:1234/v1',
+                    apiKey: localStorage.getItem('llmApiKey') || '',
+                    selectedModel: localStorage.getItem('llmSelectedModel') || ''
+                },
+                availableModels: [],
                 stats: {
                     active_jobs: 0,
                     queued_jobs: 0,
@@ -356,6 +424,57 @@
                 formatDate(dateString) {
                     const date = new Date(dateString);
                     return date.toLocaleString();
+                },
+
+                async fetchModels() {
+                    if (!this.config.baseUrl) {
+                        alert('Please enter a base URL first');
+                        return;
+                    }
+
+                    this.fetchingModels = true;
+                    try {
+                        // Use backend proxy to avoid CORS issues, include API key if set
+                        const encodedUrl = encodeURIComponent(this.config.baseUrl);
+                        const headers = {};
+                        if (this.config.apiKey) {
+                            headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+                        }
+                        
+                        const response = await fetch(`/api/llm/models?base_url=${encodedUrl}`, { headers });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || `HTTP ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        this.availableModels = data.data || [];
+                        
+                        if (this.availableModels.length === 0) {
+                            alert('No models found. Make sure LM Studio/Ollama is running with models loaded.');
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch models:', error);
+                        alert(`Failed to fetch models: ${error.message}\n\nMake sure:\n1. Your LLM server (LM Studio/Ollama) is running\n2. The base URL is correct\n3. Models are loaded in the server\n4. API key is valid (if required)`);
+                        this.availableModels = [];
+                    } finally {
+                        this.fetchingModels = false;
+                    }
+                },
+
+                saveConfig() {
+                    if (!this.config.baseUrl) {
+                        alert('Please enter a base URL');
+                        return;
+                    }
+                    
+                    localStorage.setItem('llmBaseUrl', this.config.baseUrl);
+                    localStorage.setItem('llmApiKey', this.config.apiKey || '');
+                    localStorage.setItem('llmSelectedModel', this.config.selectedModel || '');
+                    
+                    alert(`Configuration saved!\n\nBase URL: ${this.config.baseUrl}\nAPI Key: ${this.config.apiKey ? '****' + this.config.apiKey.slice(-4) : 'Not set'}\nModel: ${this.config.selectedModel || 'Not selected'}`);
+                    this.showConfig = false;
                 }
             }
         }

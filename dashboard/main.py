@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from core.database import db_manager
+from core.database import db_manager, Job
 from core.models import ScanJob, Target, ScopeConfig, JobStatus
 from core.orchestrator import workflow
 
@@ -100,6 +100,9 @@ async def dashboard_home(request: Request):
 @app.get("/api/stats")
 async def get_stats():
     """Get dashboard statistics"""
+    # Ensure database is initialized
+    if not db_manager.async_session_maker:
+        await db_manager.initialize()
     stats = await db_manager.get_dashboard_stats()
     return JSONResponse(content=stats)
 
@@ -108,7 +111,10 @@ async def get_stats():
 async def list_jobs():
     """List all scan jobs"""
     from sqlalchemy import select
-    from core.database import Job
+    
+    # Ensure database is initialized
+    if not db_manager.async_session_maker:
+        await db_manager.initialize()
     
     async with db_manager.get_session() as session:
         stmt = select(Job).order_by(Job.created_at.desc()).limit(50)
@@ -248,6 +254,35 @@ async def health_check():
         "timestamp": datetime.utcnow().isoformat(),
         "subscribers": len(active_subscribers)
     }
+
+
+@app.get("/api/llm/models")
+async def get_llm_models(base_url: str, request: Request):
+    """Proxy endpoint to fetch available models from LLM server (handles CORS)"""
+    import httpx
+    
+    if not base_url:
+        raise HTTPException(status_code=400, detail="base_url parameter is required")
+    
+    # Get API key from Authorization header if present
+    auth_header = request.headers.get("Authorization", "")
+    headers = {}
+    if auth_header.startswith("Bearer "):
+        headers["Authorization"] = auth_header
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+            response = await client.get(f"{base_url}/models")
+            response.raise_for_status()
+            return response.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Timeout connecting to LLM server")
+    except httpx.ConnectError as e:
+        raise HTTPException(status_code=503, detail=f"Cannot connect to LLM server: {str(e)}")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=f"LLM server error: {e.response.status_code}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching models: {str(e)}")
 
 
 # === Background Task Runner ===

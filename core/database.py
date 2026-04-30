@@ -374,6 +374,12 @@ class DatabaseManager:
                 "pending_reviews": pending_reviews,
             }
             return stats
+    
+    async def get_session_direct(self):
+        """Get async database session directly (for non-context usage)"""
+        if not self.async_session_maker:
+            await self.initialize()
+        return self.async_session_maker()
 
 
 # Global database instance
