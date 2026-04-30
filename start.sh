@@ -1,173 +1,223 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
-
-# Colors for output (cross-shell compatible)
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Check if we can use color
-if [ -t 1 ]; then
-    # Terminal supports color
-    :
-else
-    # Disable color
-    RED=''
-    GREEN=''
-    YELLOW=''
-    BLUE=''
-    NC=''
-fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "🛡️  ${BLUE}Bug Bounty Agent - Quick Start${NC}"
-echo "=================================="
-echo ""
+# Colors for output (cross-shell compatible using printf)
+colorize() {
+    local color="$1"
+    local text="$2"
+    if [ -t 1 ]; then
+        case "$color" in
+            red)    printf '\033[0;31m%s\033[0m' "$text" ;;
+            green)  printf '\033[0;32m%s\033[0m' "$text" ;;
+            yellow) printf '\033[1;33m%s\033[0m' "$text" ;;
+            blue)   printf '\033[0;34m%s\033[0m' "$text" ;;
+            *)      printf '%s' "$text" ;;
+        esac
+    else
+        printf '%s' "$text"
+    fi
+}
+
+printf "🛡️  "
+colorize blue "Bug Bounty Agent - Quick Start"
+printf "\n"
+printf "==================================\n\n"
 
 # Check Python version
-echo -n "📌 ${BLUE}Checking Python version...${NC} "
+printf "📌 "
+colorize blue "Checking Python version... "
 PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
-echo "${GREEN}$PYTHON_VERSION${NC}"
+colorize green "$PYTHON_VERSION"
+printf "\n"
 
 # Check and install dependencies
-echo -n "📦 ${BLUE}Checking dependencies...${NC} "
+printf "📦 "
+colorize blue "Checking dependencies... "
 if python3 -c "import fastapi, pydantic, sqlalchemy, redis, openai, httpx, mcp, aiohttp, langgraph, langchain, jinja2" 2>/dev/null; then
-    echo "${GREEN}✓ Already installed${NC}"
+    colorize green "✓ Already installed"
+    printf "\n"
 else
-    echo "${YELLOW}Installing...${NC}"
+    colorize yellow "Installing..."
+    printf "\n"
     pip3 install -q -r requirements.txt
-    echo "${GREEN}✓ Installed${NC}"
+    colorize green "✓ Installed"
+    printf "\n"
 fi
 
 # Create necessary directories
 mkdir -p data logs reports
 
 # Initialize database
-echo -n "🗄️  ${BLUE}Initializing database...${NC} "
+printf "🗄️  "
+colorize blue "Initializing database... "
 python3 core/migrate.py 2>/dev/null || true
-echo "${GREEN}✓ Done${NC}"
-echo ""
+colorize green "✓ Done"
+printf "\n\n"
 
 # Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to check if Python module exists
+python_module_exists() {
+    python3 -c "import $1" 2>/dev/null
+}
+
+# Function to check apt package
+apt_package_exists() {
+    dpkg -l | grep -q "^ii  $1 " 2>/dev/null
+}
+
 # Function to install hexstrike
 install_hexstrike() {
-    echo -n "🔨 ${YELLOW}Installing hexstrike...${NC} "
-    if command_exists pip3; then
-        pip3 install -q hexstrike 2>/dev/null || pip3 install hexstrike
-        echo "${GREEN}✓ Installed${NC}"
-        return 0
-    else
-        echo "${RED}✗ Failed (pip3 not found)${NC}"
-        return 1
+    colorize yellow "Installing hexstrike..."
+    printf "\n"
+    # Try apt first (Kali packages)
+    if command_exists apt-get; then
+        if apt-cache search hexstrike-ai >/dev/null 2>&1; then
+            sudo apt-get install -y hexstrike-ai && return 0
+        fi
     fi
+    # Try pip as fallback
+    if command_exists pip3; then
+        pip3 install hexstrike 2>/dev/null && return 0
+    fi
+    colorize red "✗ Failed to install hexstrike"
+    printf "\n"
+    return 1
 }
 
 # Function to install kali-mcp
 install_kali_mcp() {
-    echo -n "🔧 ${YELLOW}Installing kali-mcp...${NC} "
-    if command_exists pip3; then
-        pip3 install -q kali-mcp 2>/dev/null || pip3 install kali-mcp
-        echo "${GREEN}✓ Installed${NC}"
-        return 0
-    else
-        echo "${RED}✗ Failed (pip3 not found)${NC}"
-        return 1
+    colorize yellow "Installing kali-mcp..."
+    printf "\n"
+    # Try apt first (Kali packages)
+    if command_exists apt-get; then
+        if apt-cache search mcp-kali-server >/dev/null 2>&1; then
+            sudo apt-get install -y mcp-kali-server && return 0
+        elif apt-cache search kali-mcp >/dev/null 2>&1; then
+            sudo apt-get install -y kali-mcp && return 0
+        fi
     fi
+    # Try pip as fallback
+    if command_exists pip3; then
+        pip3 install kali-mcp 2>/dev/null && return 0
+    fi
+    colorize red "✗ Failed to install kali-mcp"
+    printf "\n"
+    return 1
 }
 
 # Function to start hexstrike server
 start_hexstrike() {
-    if command_exists hexstrike; then
-        echo -n "🔨 ${BLUE}Starting hexstrike server...${NC} "
+    local cmd=""
+    # Check multiple possible command names
+    if command_exists hexstrike_server; then
+        cmd="hexstrike_server"
+    elif command_exists hexstrike; then
+        cmd="hexstrike"
+    fi
+    
+    if [ -n "$cmd" ]; then
+        colorize blue "Starting hexstrike server... "
         HEXSTRIKE_PORT=${HEXSTRIKE_PORT:-8081}
-        nohup hexstrike server --port $HEXSTRIKE_PORT > logs/hexstrike.log 2>&1 &
+        nohup $cmd server --port $HEXSTRIKE_PORT > logs/hexstrike.log 2>&1 &
         HEXSTRIKE_PID=$!
         echo $HEXSTRIKE_PID > data/hexstrike.pid
         sleep 2
         if kill -0 $HEXSTRIKE_PID 2>/dev/null; then
-            echo "${GREEN}✓ Running (PID: $HEXSTRIKE_PID, Port: $HEXSTRIKE_PORT)${NC}"
+            colorize green "✓ Running (PID: $HEXSTRIKE_PID, Port: $HEXSTRIKE_PORT)"
+            printf "\n"
             return 0
         else
-            echo "${RED}✗ Failed to start${NC}"
+            colorize red "✗ Failed to start"
+            printf "\n"
             cat logs/hexstrike.log 2>/dev/null || true
             return 1
         fi
     else
-        echo "${YELLOW}⚠ hexstrike not found${NC}"
+        colorize yellow "⚠ hexstrike not found"
+        printf "\n"
         return 1
     fi
 }
 
 # Function to start kali-mcp server
 start_kali_mcp() {
-    if command_exists kali-mcp; then
-        echo -n "🔧 ${BLUE}Starting kali-mcp server...${NC} "
+    local cmd=""
+    # Check multiple possible command names
+    if command_exists kali-server-mcp; then
+        cmd="kali-server-mcp"
+    elif command_exists kali_mcp_server; then
+        cmd="kali_mcp_server"
+    elif command_exists kali-mcp; then
+        cmd="kali-mcp"
+    elif command_exists mcp_server; then
+        cmd="mcp_server"
+    fi
+    
+    if [ -n "$cmd" ]; then
+        colorize blue "Starting kali-mcp server... "
         KALI_MCP_PORT=${KALI_MCP_PORT:-8082}
-        nohup kali-mcp serve --port $KALI_MCP_PORT > logs/kali-mcp.log 2>&1 &
+        nohup $cmd serve --port $KALI_MCP_PORT > logs/kali-mcp.log 2>&1 &
         KALI_MCP_PID=$!
         echo $KALI_MCP_PID > data/kali-mcp.pid
         sleep 2
         if kill -0 $KALI_MCP_PID 2>/dev/null; then
-            echo "${GREEN}✓ Running (PID: $KALI_MCP_PID, Port: $KALI_MCP_PORT)${NC}"
+            colorize green "✓ Running (PID: $KALI_MCP_PID, Port: $KALI_MCP_PORT)"
+            printf "\n"
             return 0
         else
-            echo "${RED}✗ Failed to start${NC}"
+            colorize red "✗ Failed to start"
+            printf "\n"
             cat logs/kali-mcp.log 2>/dev/null || true
             return 1
         fi
     else
-        echo "${YELLOW}⚠ kali-mcp not found${NC}"
+        colorize yellow "⚠ kali-mcp not found"
+        printf "\n"
         return 1
     fi
 }
 
 # Check and install/start hexstrike
-echo "🔧 ${BLUE}Checking tool servers...${NC}"
+printf "🔧 "
+colorize blue "Checking tool servers..."
+printf "\n"
 HEXSTRIKE_AVAILABLE=false
 KALI_MCP_AVAILABLE=false
 
-if ! command_exists hexstrike; then
-    echo -n "   ${YELLOW}hexstrike not found. Install? (y/n): ${NC}"
-    if [ "$AUTO_INSTALL_TOOLS" = "true" ] || [ "$1" = "--auto-install" ]; then
-        echo "(auto)"
-        if install_hexstrike; then
-            HEXSTRIKE_AVAILABLE=true
-        fi
-    else
-        echo "(skipping, use --auto-install to auto-install)"
-    fi
+if ! command_exists hexstrike_server && ! command_exists hexstrike; then
+    colorize yellow "   ⚠ hexstrike not found."
+    printf "\n"
+    colorize yellow "     Install with: sudo apt install hexstrike-ai"
+    printf "\n"
 else
-    echo "   ${GREEN}✓ hexstrike found${NC}"
+    colorize green "   ✓ hexstrike found"
+    printf "\n"
     HEXSTRIKE_AVAILABLE=true
 fi
 
 # Check and install/start kali-mcp
-if ! command_exists kali-mcp; then
-    echo -n "   ${YELLOW}kali-mcp not found. Install? (y/n): ${NC}"
-    if [ "$AUTO_INSTALL_TOOLS" = "true" ] || [ "$1" = "--auto-install" ]; then
-        echo "(auto)"
-        if install_kali_mcp; then
-            KALI_MCP_AVAILABLE=true
-        fi
-    else
-        echo "(skipping, use --auto-install to auto-install)"
-    fi
+if ! command_exists kali-server-mcp && ! command_exists kali_mcp_server && ! command_exists kali-mcp && ! command_exists mcp-server; then
+    colorize yellow "   ⚠ kali-mcp/mcp-server not found."
+    printf "\n"
+    colorize yellow "     Install with: sudo apt install mcp-kali-server"
+    printf "\n"
 else
-    echo "   ${GREEN}✓ kali-mcp found${NC}"
+    colorize green "   ✓ kali-mcp/mcp-server found"
+    printf "\n"
     KALI_MCP_AVAILABLE=true
 fi
 
 # Start servers
-echo ""
-echo "🚀 ${BLUE}Starting tool servers...${NC}"
+printf "\n🚀 "
+colorize blue "Starting tool servers..."
+printf "\n"
 HEXSTRIKE_RUNNING=false
 KALI_MCP_RUNNING=false
 
@@ -183,28 +233,37 @@ if [ "$KALI_MCP_AVAILABLE" = true ]; then
     fi
 fi
 
-echo ""
-echo "✅ ${GREEN}Ready to start!${NC}"
-echo ""
-echo "🌐 ${BLUE}Dashboard URL:${NC} http://localhost:8000"
+printf "\n✅ "
+colorize green "Ready to start!"
+printf "\n\n"
+printf "🌐 "
+colorize blue "Dashboard URL:"
+printf " http://localhost:8000\n"
 if [ "$HEXSTRIKE_RUNNING" = true ]; then
-    echo "🔨 ${BLUE}hexstrike server:${NC} http://localhost:${HEXSTRIKE_PORT:-8081}"
+    printf "🔨 "
+    colorize blue "hexstrike server:"
+    printf " http://localhost:%s\n" "${HEXSTRIKE_PORT:-8081}"
 fi
 if [ "$KALI_MCP_RUNNING" = true ]; then
-    echo "🔧 ${BLUE}kali-mcp server:${NC} http://localhost:${KALI_MCP_PORT:-8082}"
+    printf "🔧 "
+    colorize blue "kali-mcp server:"
+    printf " http://localhost:%s\n" "${KALI_MCP_PORT:-8082}"
 fi
-echo ""
+printf "\n"
 
 # Cleanup function
 cleanup() {
-    echo ""
-    echo "🛑 ${YELLOW}Stopping servers...${NC}"
+    printf "\n🛑 "
+    colorize yellow "Stopping servers..."
+    printf "\n"
     
     if [ -f data/hexstrike.pid ]; then
         HEXSTRIKE_PID=$(cat data/hexstrike.pid)
         if kill -0 $HEXSTRIKE_PID 2>/dev/null; then
             kill $HEXSTRIKE_PID 2>/dev/null || true
-            echo "   ${BLUE}hexstrike stopped${NC}"
+            printf "   "
+            colorize blue "hexstrike stopped"
+            printf "\n"
         fi
         rm -f data/hexstrike.pid
     fi
@@ -213,7 +272,9 @@ cleanup() {
         KALI_MCP_PID=$(cat data/kali-mcp.pid)
         if kill -0 $KALI_MCP_PID 2>/dev/null; then
             kill $KALI_MCP_PID 2>/dev/null || true
-            echo "   ${BLUE}kali-mcp stopped${NC}"
+            printf "   "
+            colorize blue "kali-mcp stopped"
+            printf "\n"
         fi
         rm -f data/kali-mcp.pid
     fi
@@ -223,9 +284,10 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-echo "🚀 ${BLUE}Starting Bug Bounty Agent Dashboard...${NC}"
-echo "   Press Ctrl+C to stop all servers"
-echo ""
+printf "🚀 "
+colorize blue "Starting Bug Bounty Agent Dashboard..."
+printf "\n"
+printf "   Press Ctrl+C to stop all servers\n\n"
 
 export HEXSTRIKE_URL="http://localhost:${HEXSTRIKE_PORT:-8081}"
 export KALI_MCP_URL="http://localhost:${KALI_MCP_PORT:-8082}"
@@ -235,6 +297,8 @@ export KALI_MCP_RUNNING=$KALI_MCP_RUNNING
 if [ "$DEBUG" = "true" ]; then
     uvicorn dashboard.main:app --reload --host 0.0.0.0 --port 8000
 else
-    echo "🚀 ${GREEN}Running in production mode${NC}"
+    printf "🚀 "
+    colorize green "Running in production mode"
+    printf "\n"
     uvicorn dashboard.main:app --host 0.0.0.0 --port 8000
 fi
