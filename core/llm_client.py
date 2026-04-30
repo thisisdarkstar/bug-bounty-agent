@@ -17,7 +17,11 @@ from openai import AsyncOpenAI
 class LLMCache:
     """Cache for LLM responses to reduce redundant calls"""
     
-    def __init__(self, cache_dir: str = "/workspace/data/llm_cache", ttl: int = 3600):
+    def __init__(self, cache_dir: str = None, ttl: int = 3600):
+        if cache_dir is None:
+            # Use relative path from project root
+            project_root = Path(__file__).parent.parent
+            cache_dir = str(project_root / "data" / "llm_cache")
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.ttl = ttl

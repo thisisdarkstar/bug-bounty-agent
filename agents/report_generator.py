@@ -16,7 +16,7 @@ async def generate_full_report(
     target: str,
     findings: List[Dict[str, Any]],
     tool_outputs: List[Dict[str, Any]],
-    output_dir: str = "/workspace/reports"
+    output_dir: str = None
 ) -> str:
     """
     Generate complete security assessment report in multiple formats
@@ -26,11 +26,16 @@ async def generate_full_report(
         target: Target domain
         findings: List of confirmed findings
         tool_outputs: Raw tool output data
-        output_dir: Directory to save reports
+        output_dir: Directory to save reports (defaults to project_root/reports)
         
     Returns:
         Path to the main HTML report
     """
+    if output_dir is None:
+        # Use relative path from project root
+        project_root = Path(__file__).parent.parent
+        output_dir = str(project_root / "reports")
+    
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     

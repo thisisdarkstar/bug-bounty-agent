@@ -8,12 +8,6 @@ echo "🛡️  Bug Bounty Agent - Quick Start"
 echo "=================================="
 echo ""
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
 # Step 1: Check Python version
 echo -n "📌 Checking Python version... "
 PYTHON_VERSION=$(python3 --version 2>&1 | cut -d' ' -f2)
@@ -22,17 +16,17 @@ echo "$PYTHON_VERSION"
 # Step 2: Install dependencies (if needed)
 echo -n "📦 Checking dependencies... "
 if python3 -c "import fastapi, pydantic, sqlalchemy, langgraph" 2>/dev/null; then
-    echo "${GREEN}Already installed${NC}"
+    echo "✓ Already installed"
 else
-    echo "${YELLOW}Installing...${NC}"
+    echo "Installing..."
     pip3 install -r requirements.txt --quiet
-    echo "${GREEN}Done${NC}"
+    echo "✓ Done"
 fi
 
 # Step 3: Initialize database
 echo -n "🗄️  Initializing database... "
 python3 core/migrate.py > /dev/null 2>&1 || true
-echo "${GREEN}Done${NC}"
+echo "✓ Done"
 
 # Step 4: Start dashboard
 echo ""
@@ -46,4 +40,12 @@ echo ""
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
-python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Check if running in development mode
+if [ "$1" = "--dev" ]; then
+    echo "🔧 Running in development mode with auto-reload"
+    python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000 --reload
+else
+    echo "🚀 Running in production mode"
+    python3 -m uvicorn dashboard.main:app --host 0.0.0.0 --port 8000
+fi
